@@ -4,7 +4,8 @@ import { ApiError } from '../../utils/ApiError.js';
 import { sendSuccess } from '../../utils/ApiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
-const baseSchema = z.object({
+// Base fields without refine — extend first, then refine per branch (Zod v4 requirement)
+const baseFields = {
   offerName: z.string().min(1),
   code: z.string().optional(),
   applicableTo: z.enum(['dine_in', 'delivery', 'both']).default('both'),
@@ -15,30 +16,20 @@ const baseSchema = z.object({
   applicableCategories: z.array(z.string()).optional(),
   applicableSubCategories: z.array(z.string()).optional(),
   applicableItems: z.array(z.string()).optional(),
-}).refine((d) => d.endDate > d.startDate, {
-  message: 'endDate must be after startDate',
-  path: ['endDate'],
-});
+};
+
+const dateRefine = (d) => d.endDate > d.startDate;
+const dateRefineOpts = { message: 'endDate must be after startDate', path: ['endDate'] };
 
 const discountSchema = z.discriminatedUnion('type', [
-  baseSchema.extend({
-    type: z.literal('percentage'),
-    percentage: z.number().min(1).max(100),
-  }),
-  baseSchema.extend({
-    type: z.literal('flat_amount'),
-    flatAmount: z.number().positive(),
-  }),
-  baseSchema.extend({
-    type: z.literal('free_item'),
-    freeItemId: z.string().min(1),
-    freeItemName: z.string().optional(),
-  }),
-  baseSchema.extend({
-    type: z.literal('tablewise'),
-    flatAmount: z.number().positive(),
-    applicableTableNumbers: z.array(z.string()).min(1),
-  }),
+  z.object({ ...baseFields, type: z.literal('percentage'), percentage: z.number().min(1).max(100) })
+    .refine(dateRefine, dateRefineOpts),
+  z.object({ ...baseFields, type: z.literal('flat_amount'), flatAmount: z.number().positive() })
+    .refine(dateRefine, dateRefineOpts),
+  z.object({ ...baseFields, type: z.literal('free_item'), freeItemId: z.string().min(1), freeItemName: z.string().optional() })
+    .refine(dateRefine, dateRefineOpts),
+  z.object({ ...baseFields, type: z.literal('tablewise'), flatAmount: z.number().positive(), applicableTableNumbers: z.array(z.string()).min(1) })
+    .refine(dateRefine, dateRefineOpts),
 ]);
 
 const validate = (body) => {

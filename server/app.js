@@ -36,6 +36,12 @@ app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().to
 
 app.use(express.static('public'));
 
+app.use((req, res) => res.status(404).json({
+  status: 'error',
+  code: 'NOT_FOUND',
+  message: `Route ${req.method} ${req.originalUrl} not found`,
+}));
+
 app.use(errorHandler);
 
 export { app };
