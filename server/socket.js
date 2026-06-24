@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from './config/env.js';
 import { redis } from './config/redis.js';
 import Order from './models/Order.js';
+import Restaurant from './models/Restaurant.js';
 import * as liveMonitorService from './services/liveMonitor.service.js';
 import logger from './utils/logger.js';
 
@@ -35,6 +36,8 @@ export function initSocket(httpServer) {
     socket.on('join_restaurant', async ({ restaurantId, token }) => {
       const decoded = verifyUserToken(token);
       if (!decoded || decoded.role !== 'restaurant_owner') return socket.disconnect();
+      const owns = await Restaurant.exists({ _id: restaurantId, ownerId: decoded.userId });
+      if (!owns) return socket.disconnect();
       socket.join(`restaurant:${restaurantId}`);
       socket.data.restaurantId = restaurantId;
       await redis.sadd('live:active_restaurants', restaurantId);

@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import Table from '../../models/Table.js';
 import TableSession from '../../models/TableSession.js';
+import Bill from '../../models/Bill.js';
 import * as waiterService from '../../services/waiter.service.js';
 import * as menuService from '../../services/menu.service.js';
 import * as orderService from '../../services/order.service.js';
@@ -7,6 +9,16 @@ import * as billingService from '../../services/billing.service.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { sendSuccess } from '../../utils/ApiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
+
+const waiterOrderSchema = z.object({
+  tableSessionId: z.string().min(1),
+  items: z.array(z.object({
+    menuItemId: z.string().min(1),
+    quantity: z.number().int().min(1),
+    note: z.string().optional(),
+  })).min(1),
+  specialInstructions: z.string().optional(),
+});
 
 export const scanTable = asyncHandler(async (req, res) => {
   const { qrToken } = req.body;
@@ -42,14 +54,19 @@ export const getMenu = asyncHandler(async (req, res) => {
 });
 
 export const createOrder = asyncHandler(async (req, res) => {
+  const result = waiterOrderSchema.safeParse(req.body);
+  if (!result.success) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Invalid order data', result.error.flatten());
+  }
+
   const idempotencyKey = req.headers['idempotency-key'] || null;
 
   const order = await orderService.createOrder({
+    ...result.data,
     restaurantId: req.staff.restaurantId,
     staffId: req.staff._id,
     type: 'dine_in',
     idempotencyKey,
-    ...req.body,
   });
 
   const statusCode = order.duplicate ? 200 : 201;
@@ -87,7 +104,6 @@ export const markPaid = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'NOT_FOUND', 'Session not found');
   }
 
-  const Bill = (await import('../../models/Bill.js')).default;
   const bill = await Bill.findOne({ tableSessionId: req.params.sessionId, status: 'open' }).lean();
   if (!bill) throw new ApiError(404, 'NOT_FOUND', 'No open bill for this session — call assemble first');
 

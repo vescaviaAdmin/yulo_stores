@@ -52,7 +52,7 @@ export const refresh = asyncHandler(async (req, res) => {
   const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
 
   const user = await User.findById(decoded.userId).lean();
-  if (!user) throw new ApiError(401, 'INVALID_TOKEN', 'User not found');
+  if (!user || !user.isActive) throw new ApiError(401, 'INVALID_TOKEN', 'User not found');
 
   const accessToken = jwt.sign(
     { userId: user._id, role: user.role },

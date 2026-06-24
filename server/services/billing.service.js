@@ -1,6 +1,7 @@
 import Bill from '../models/Bill.js';
 import TableSession from '../models/TableSession.js';
 import Table from '../models/Table.js';
+import Order from '../models/Order.js';
 import Discount from '../models/Discount.js';
 import MenuItem from '../models/MenuItem.js';
 import Restaurant from '../models/Restaurant.js';
@@ -125,6 +126,10 @@ export const markPaid = async ({ billId, restaurantId, paymentMethod }) => {
       bill.tableSessionId,
       { status: 'paid', closedAt: now },
       { new: false }
+    ),
+    Order.updateMany(
+      { tableSessionId: bill.tableSessionId, paymentStatus: 'pending' },
+      { $set: { paymentStatus: 'paid', paymentMethod } }
     ),
   ]);
 
