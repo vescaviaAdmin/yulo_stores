@@ -1,47 +1,48 @@
-import { io } from '../socket.js';
-import logger from '../utils/logger.js';
+import { getIO } from '../socket.js';
 
-export const newOrder = (order) => {
-  try {
-    io?.to(`restaurant:${order.restaurantId}`).emit('order:new', order);
-  } catch (err) {
-    logger.error({ err, orderId: order._id }, 'Failed to emit order:new');
-  }
-};
-
-export const orderStatusUpdated = (order) => {
-  try {
-    io?.to(`restaurant:${order.restaurantId}`).emit('order:status_updated', {
+export const notifyService = {
+  newOrder(order) {
+    const io = getIO();
+    const payload = {
       orderId: order._id,
-      status: order.status,
-      tableSessionId: order.tableSessionId,
-    });
-  } catch (err) {
-    logger.error({ err, orderId: order._id }, 'Failed to emit order:status_updated');
-  }
-};
+      type: order.type,
+      tableNumber: order.tableNumber,
+      batchNumber: order.batchNumber,
+      items: order.items,
+      specialInstructions: order.specialInstructions,
+      subtotal: order.subtotal,
+    };
+    io.to(`restaurant:${order.restaurantId}`).emit('new_order', payload);
+    io.to(`kitchen:${order.restaurantId}`).emit('new_order', payload);
+  },
 
-export const billUpdated = (bill) => {
-  try {
-    io?.to(`restaurant:${bill.restaurantId}`).emit('bill:updated', {
-      billId: bill._id,
-      tableSessionId: bill.tableSessionId,
-      tableId: bill.tableId,
-      grandTotal: bill.grandTotal,
-    });
-  } catch (err) {
-    logger.error({ err, billId: bill._id }, 'Failed to emit bill:updated');
-  }
-};
+  orderStatusUpdated(order) {
+    const io = getIO();
+    const payload = { orderId: order._id, status: order.status, updatedAt: order.updatedAt };
+    io.to(`restaurant:${order.restaurantId}`).emit('order_status_updated', payload);
+    io.to(`kitchen:${order.restaurantId}`).emit('order_status_updated', payload);
+    io.to(`order:${order._id}`).emit('order_status_updated', payload);
+    if (order.staffId) {
+      io.to(`waiter:${order.restaurantId}:${order.staffId}`).emit('order_status_updated', payload);
+    }
+  },
 
-export const tableStatusChanged = ({ restaurantId, tableId, tableSessionId, status }) => {
-  try {
-    io?.to(`restaurant:${restaurantId}`).emit('table:status_changed', {
-      tableId,
-      tableSessionId,
-      status,
+  billUpdated({ _id, tableId, grandTotal, discountsApplied, batches }) {
+    const io = getIO();
+    io.to(`table:${tableId}`).emit('bill_updated', {
+      billId: _id,
+      grandTotal,
+      discountsApplied,
+      lastBatch: batches?.at(-1),
     });
-  } catch (err) {
-    logger.error({ err, tableId }, 'Failed to emit table:status_changed');
-  }
+  },
+
+  tableStatusChanged(restaurantId, table, sessionStatus) {
+    const io = getIO();
+    io.to(`restaurant:${restaurantId}`).emit('table_status_changed', {
+      tableId: table._id,
+      identifier: table.identifier,
+      sessionStatus,
+    });
+  },
 };

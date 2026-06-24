@@ -5,7 +5,7 @@ import MenuItem from '../models/MenuItem.js';
 import Restaurant from '../models/Restaurant.js';
 import { redis } from '../config/redis.js';
 import { ApiError } from '../utils/ApiError.js';
-import * as notifyService from './notify.service.js';
+import { notifyService } from './notify.service.js';
 
 export const createOrder = async ({
   restaurantId,

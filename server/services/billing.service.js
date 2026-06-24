@@ -1,10 +1,11 @@
 import Bill from '../models/Bill.js';
 import TableSession from '../models/TableSession.js';
+import Table from '../models/Table.js';
 import Discount from '../models/Discount.js';
 import MenuItem from '../models/MenuItem.js';
 import Restaurant from '../models/Restaurant.js';
 import { ApiError } from '../utils/ApiError.js';
-import * as notifyService from './notify.service.js';
+import { notifyService } from './notify.service.js';
 
 export const assembleBill = async (tableSessionId) => {
   const session = await TableSession.findById(tableSessionId).populate('orders').lean();
@@ -119,17 +120,18 @@ export const markPaid = async ({ billId, restaurantId, paymentMethod }) => {
   bill.paidBy = paymentMethod;
   await bill.save();
 
-  await TableSession.findByIdAndUpdate(bill.tableSessionId, {
-    status: 'paid',
-    closedAt: now,
-  });
+  const [session] = await Promise.all([
+    TableSession.findByIdAndUpdate(
+      bill.tableSessionId,
+      { status: 'paid', closedAt: now },
+      { new: false }
+    ),
+  ]);
 
-  notifyService.tableStatusChanged({
-    restaurantId,
-    tableId: null,
-    tableSessionId: bill.tableSessionId,
-    status: 'paid',
-  });
+  if (session?.tableId) {
+    const table = await Table.findById(session.tableId).lean();
+    if (table) notifyService.tableStatusChanged(restaurantId, table, 'paid');
+  }
 
   return bill;
 };

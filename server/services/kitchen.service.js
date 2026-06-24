@@ -1,6 +1,6 @@
 import Order from '../models/Order.js';
 import { ApiError } from '../utils/ApiError.js';
-import * as notifyService from './notify.service.js';
+import { notifyService } from './notify.service.js';
 
 const VALID_TRANSITIONS = {
   placed: ['confirmed', 'cancelled'],
