@@ -1,0 +1,70 @@
+import argon2 from 'argon2';
+import StaffMember from '../../models/StaffMember.js';
+import { ApiError } from '../../utils/ApiError.js';
+import { sendSuccess } from '../../utils/ApiResponse.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
+
+export const listStaff = asyncHandler(async (req, res) => {
+  const staff = await StaffMember.find({ restaurantId: req.restaurant._id })
+    .select('-pinHash')
+    .lean();
+  sendSuccess(res, 200, 'Staff members', { staff });
+});
+
+export const createStaff = asyncHandler(async (req, res) => {
+  const { name, role, pin, email } = req.body;
+
+  if (!name) throw new ApiError(400, 'VALIDATION_ERROR', 'name is required');
+  if (!role || !['waiter', 'chef'].includes(role)) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'role must be "waiter" or "chef"');
+  }
+  if (!pin || pin.length < 4 || pin.length > 8) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'pin must be 4–8 digits');
+  }
+
+  const pinHash = await argon2.hash(pin, { type: argon2.argon2id });
+  const member = await StaffMember.create({
+    restaurantId: req.restaurant._id,
+    name,
+    role,
+    pinHash,
+    email: email || null,
+  });
+
+  const out = member.toObject();
+  delete out.pinHash;
+  sendSuccess(res, 201, 'Staff member created', { staff: out });
+});
+
+export const updateStaff = asyncHandler(async (req, res) => {
+  const { name, email, isActive, pin } = req.body;
+  const updates = {};
+  if (name !== undefined) updates.name = name;
+  if (email !== undefined) updates.email = email;
+  if (isActive !== undefined) updates.isActive = isActive;
+  if (pin) {
+    if (pin.length < 4 || pin.length > 8) {
+      throw new ApiError(400, 'VALIDATION_ERROR', 'pin must be 4–8 digits');
+    }
+    updates.pinHash = await argon2.hash(pin, { type: argon2.argon2id });
+  }
+
+  const member = await StaffMember.findOneAndUpdate(
+    { _id: req.params.staffId, restaurantId: req.restaurant._id },
+    { $set: updates },
+    { new: true }
+  ).select('-pinHash');
+
+  if (!member) throw new ApiError(404, 'NOT_FOUND', 'Staff member not found');
+  sendSuccess(res, 200, 'Staff member updated', { staff: member });
+});
+
+export const removeStaff = asyncHandler(async (req, res) => {
+  const member = await StaffMember.findOneAndUpdate(
+    { _id: req.params.staffId, restaurantId: req.restaurant._id },
+    { $set: { isActive: false } },
+    { new: true }
+  );
+  if (!member) throw new ApiError(404, 'NOT_FOUND', 'Staff member not found');
+  sendSuccess(res, 200, 'Staff member deactivated', null);
+});

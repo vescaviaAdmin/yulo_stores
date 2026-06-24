@@ -1,15 +1,5 @@
 import mongoose from 'mongoose';
 
-const ingredientSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    quantity: { type: Number },
-    unit: { type: String },
-    cost: { type: Number },
-  },
-  { _id: false }
-);
-
 const menuItemSchema = new mongoose.Schema(
   {
     restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
@@ -19,10 +9,10 @@ const menuItemSchema = new mongoose.Schema(
     description: { type: String },
     image: { type: String },
     prepTime: { type: Number },
-    foodType: { type: String, enum: ['veg', 'non_veg', 'vegan'], required: true },
+    foodType: { type: String, enum: ['veg', 'non_veg', 'egg'], required: true },
     sellingPrice: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, default: null },
-    ingredients: [ingredientSchema],
+    ingredients: [String],
     isAvailable: { type: Boolean, default: true },
   },
   { timestamps: true }

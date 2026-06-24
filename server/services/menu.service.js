@@ -10,7 +10,7 @@ export const getMenu = async (restaurantId) => {
   if (cached) return cached;
 
   const [items, categories, subcategories] = await Promise.all([
-    MenuItem.find({ restaurantId, isAvailable: true }).lean(),
+    MenuItem.find({ restaurantId, isAvailable: true }).lean({ virtuals: true }),
     Category.find({ restaurantId }).sort({ displayOrder: 1 }).lean(),
     SubCategory.find({ restaurantId }).lean(),
   ]);

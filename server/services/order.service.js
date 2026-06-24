@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import TableSession from '../models/TableSession.js';
 import MenuItem from '../models/MenuItem.js';
@@ -59,67 +58,47 @@ export const createOrder = async ({
 
   const subtotal = snapshots.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // Step 3 — Dine-in path (with transaction)
+  // Step 3 — Dine-in path (no transaction — works with standalone MongoDB)
   if (tableSessionId) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const updatedSession = await TableSession.findOneAndUpdate(
-        { _id: tableSessionId, status: 'open' },
-        { $inc: { batchCount: 1 } },
-        { new: true, session }
-      );
-      if (!updatedSession) {
-        throw new ApiError(400, 'TABLE_SESSION_CLOSED', 'Session is not open');
-      }
-
-      const batchNumber = updatedSession.batchCount;
-      const tableNumber = updatedSession.tableNumber ?? null;
-
-      const [order] = await Order.create(
-        [
-          {
-            restaurantId,
-            tableSessionId,
-            userId,
-            staffId,
-            type: 'dine_in',
-            tableNumber,
-            batchNumber,
-            items: snapshots,
-            subtotal,
-            specialInstructions,
-            paymentMethod: paymentMethod || 'cash',
-          },
-        ],
-        { session }
-      );
-
-      await TableSession.findByIdAndUpdate(
-        tableSessionId,
-        { $push: { orders: order._id } },
-        { session }
-      );
-
-      await session.commitTransaction();
-
-      if (idempotencyKey) {
-        await redis.set(
-          `idem:${idempotencyKey}:${restaurantId}`,
-          order._id.toString(),
-          'EX',
-          86400
-        );
-      }
-
-      notifyService.newOrder(order);
-      return order;
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      session.endSession();
+    const updatedSession = await TableSession.findOneAndUpdate(
+      { _id: tableSessionId, status: 'open' },
+      { $inc: { batchCount: 1 } },
+      { new: true }
+    );
+    if (!updatedSession) {
+      throw new ApiError(400, 'TABLE_SESSION_CLOSED', 'Session is not open');
     }
+
+    const batchNumber = updatedSession.batchCount;
+
+    const order = await Order.create({
+      restaurantId,
+      tableSessionId,
+      userId,
+      staffId,
+      type: 'dine_in',
+      batchNumber,
+      items: snapshots,
+      subtotal,
+      specialInstructions,
+      paymentMethod: paymentMethod || 'cash',
+    });
+
+    await TableSession.findByIdAndUpdate(tableSessionId, {
+      $push: { orders: order._id },
+    });
+
+    if (idempotencyKey) {
+      await redis.set(
+        `idem:${idempotencyKey}:${restaurantId}`,
+        order._id.toString(),
+        'EX',
+        86400
+      );
+    }
+
+    notifyService.newOrder(order);
+    return order;
   }
 
   // Step 4 — Delivery / takeaway path

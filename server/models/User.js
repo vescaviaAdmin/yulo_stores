@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const addressSchema = new mongoose.Schema(
   {
-    label: { type: String, enum: ['home', 'work', 'other'], default: 'home' },
+    label: { type: String, default: 'home' },
     street: { type: String },
     city: { type: String },
     state: { type: String },
@@ -12,7 +12,7 @@ const addressSchema = new mongoose.Schema(
       coordinates: [Number],
     },
   },
-  { _id: false }
+  {}
 );
 
 const userSchema = new mongoose.Schema(

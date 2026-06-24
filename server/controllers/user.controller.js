@@ -11,7 +11,7 @@ const updateProfileSchema = z.object({
 });
 
 const addressSchema = z.object({
-  label: z.enum(['home', 'work', 'other']).default('home'),
+  label: z.string().min(1).default('home'),
   street: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -23,7 +23,7 @@ const addressSchema = z.object({
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).lean();
+  const user = await User.findById(req.user._id).select('-passwordHash').lean();
   if (!user) throw new ApiError(404, 'NOT_FOUND', 'User not found');
   sendSuccess(res, 200, 'Profile', { user });
 });

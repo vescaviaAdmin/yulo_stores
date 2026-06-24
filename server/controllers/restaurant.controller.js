@@ -14,7 +14,7 @@ export const listRestaurants = asyncHandler(async (req, res) => {
   // Text search path — no location cache
   if (q) {
     const results = await Restaurant.find(
-      { $text: { $search: q }, isActive: true, isVerified: true },
+      { $text: { $search: q }, isActive: true },
       { score: { $meta: 'textScore' } }
     )
       .sort({ score: { $meta: 'textScore' } })
@@ -44,7 +44,6 @@ export const listRestaurants = asyncHandler(async (req, res) => {
       },
     },
     isActive: true,
-    isVerified: true,
   })
     .skip((parsedPage - 1) * PAGE_SIZE)
     .limit(PAGE_SIZE)

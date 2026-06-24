@@ -28,7 +28,7 @@ export const getKPIs = async (restaurantId) => {
   };
 };
 
-const PERIOD_DAYS = { day: 1, week: 7, month: 30 };
+const PERIOD_DAYS = { today: 1, day: 1, week: 7, month: 30, year: 365 };
 
 export const getSalesChart = (restaurantId, period = 'week') => {
   const days = PERIOD_DAYS[period] ?? 7;

@@ -46,7 +46,7 @@ const billSchema = new mongoose.Schema(
     grandTotal: { type: Number, required: true },
     status: { type: String, enum: ['open', 'paid', 'cancelled'], default: 'open' },
     paidAt: { type: Date },
-    paidBy: { type: String, enum: ['cash', 'online', 'card'] },
+    paidBy: { type: String, enum: ['cash', 'upi', 'card', 'online'] },
   },
   { timestamps: true }
 );

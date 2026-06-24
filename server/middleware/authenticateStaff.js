@@ -8,7 +8,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 export const authenticateStaff = asyncHandler(async (req, res, next) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
-    throw new ApiError(401, 'INVALID_TOKEN', 'No token provided');
+    throw new ApiError(401, 'UNAUTHORIZED', 'No token provided');
   }
   const token = header.slice(7);
 

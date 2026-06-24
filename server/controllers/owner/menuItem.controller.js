@@ -10,6 +10,12 @@ export const list = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, 'Menu items', { items });
 });
 
+const parseIngredients = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try { return JSON.parse(raw); } catch { return [raw]; }
+};
+
 export const create = asyncHandler(async (req, res) => {
   const { name, description, foodType, sellingPrice, discountedPrice, categoryId,
     subCategoryId, prepTime, ingredients } = req.body;
@@ -21,10 +27,10 @@ export const create = asyncHandler(async (req, res) => {
     name,
     description,
     foodType,
-    sellingPrice,
-    discountedPrice: discountedPrice ?? null,
-    prepTime,
-    ingredients: ingredients || [],
+    sellingPrice: Number(sellingPrice),
+    discountedPrice: discountedPrice != null ? Number(discountedPrice) : null,
+    prepTime: prepTime != null ? Number(prepTime) : undefined,
+    ingredients: parseIngredients(ingredients),
   };
 
   let uploadedPublicId;
@@ -71,6 +77,10 @@ export const update = asyncHandler(async (req, res) => {
   if (!existing) throw new ApiError(404, 'NOT_FOUND', 'Menu item not found');
 
   const updates = { ...req.body };
+  if (updates.sellingPrice != null) updates.sellingPrice = Number(updates.sellingPrice);
+  if (updates.discountedPrice != null) updates.discountedPrice = Number(updates.discountedPrice);
+  if (updates.prepTime != null) updates.prepTime = Number(updates.prepTime);
+  if (updates.ingredients != null) updates.ingredients = parseIngredients(updates.ingredients);
   let uploadedPublicId;
 
   if (req.file) {

@@ -33,7 +33,7 @@ const orderSchema = new mongoose.Schema(
       enum: ['pending', 'paid', 'failed', 'refunded'],
       default: 'pending',
     },
-    paymentMethod: { type: String, enum: ['cash', 'online', 'card'], default: null },
+    paymentMethod: { type: String, enum: ['cash', 'upi', 'card', 'online'], default: null },
     paymentIntentId: { type: String, default: null },
     deliveryAddress: {
       street: { type: String },
