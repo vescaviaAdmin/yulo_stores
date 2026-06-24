@@ -7,20 +7,21 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadImage = async (fileBuffer, folder) => {
-  const result = await new Promise((resolve, reject) => {
+export const uploadBuffer = ({ buffer, folder, publicId }) =>
+  new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (err, res) => (err ? reject(err) : resolve(res))
+      { folder, public_id: publicId, resource_type: 'image' },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve({ secureUrl: result.secure_url, publicId: result.public_id });
+      }
     );
-    stream.end(fileBuffer);
+    stream.end(buffer);
   });
-  return { url: result.secure_url, publicId: result.public_id };
-};
 
-export const destroyImage = async (publicId) => {
+export const deleteImage = async (publicId) => {
   if (!publicId) return;
-  await cloudinary.uploader.destroy(publicId).catch(() => {});
+  await cloudinary.uploader.destroy(publicId);
 };
 
 export { cloudinary };

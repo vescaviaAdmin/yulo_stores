@@ -19,18 +19,29 @@ export const updateSettings = asyncHandler(async (req, res) => {
   let bannerUrl = req.restaurant.bannerImage;
 
   if (req.files?.logo?.[0]) {
-    const { url } = await uploadService.uploadImage(
-      req.files.logo[0].buffer,
-      `yulostores/brands/${req.restaurant._id}`
-    );
-    logoUrl = url;
+    try {
+      const { secureUrl } = await uploadService.uploadBuffer({
+        buffer: req.files.logo[0].buffer,
+        folder: `yulostores/brands/${req.restaurant._id}`,
+        publicId: `logo_${Date.now()}`,
+      });
+      logoUrl = secureUrl;
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Logo upload failed');
+    }
   }
+
   if (req.files?.banner?.[0]) {
-    const { url } = await uploadService.uploadImage(
-      req.files.banner[0].buffer,
-      `yulostores/brands/${req.restaurant._id}`
-    );
-    bannerUrl = url;
+    try {
+      const { secureUrl } = await uploadService.uploadBuffer({
+        buffer: req.files.banner[0].buffer,
+        folder: `yulostores/brands/${req.restaurant._id}`,
+        publicId: `banner_${Date.now()}`,
+      });
+      bannerUrl = secureUrl;
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Banner upload failed');
+    }
   }
 
   const updated = await Restaurant.findByIdAndUpdate(

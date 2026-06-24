@@ -5,12 +5,6 @@ import { ApiError } from '../../utils/ApiError.js';
 import { sendSuccess } from '../../utils/ApiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
-const extractPublicId = (url) => {
-  if (!url) return null;
-  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
-  return match ? match[1] : null;
-};
-
 export const list = asyncHandler(async (req, res) => {
   const items = await MenuItem.find({ restaurantId: req.restaurant._id }).lean();
   sendSuccess(res, 200, 'Menu items', { items });
@@ -20,16 +14,7 @@ export const create = asyncHandler(async (req, res) => {
   const { name, description, foodType, sellingPrice, discountedPrice, categoryId,
     subCategoryId, prepTime, ingredients } = req.body;
 
-  let image;
-  if (req.file) {
-    const { url } = await uploadService.uploadImage(
-      req.file.buffer,
-      `yulostores/menu/${req.restaurant._id}`
-    );
-    image = url;
-  }
-
-  const item = await MenuItem.create({
+  const itemData = {
     restaurantId: req.restaurant._id,
     categoryId,
     subCategoryId: subCategoryId || undefined,
@@ -40,8 +25,30 @@ export const create = asyncHandler(async (req, res) => {
     discountedPrice: discountedPrice ?? null,
     prepTime,
     ingredients: ingredients || [],
-    image,
-  });
+  };
+
+  let uploadedPublicId;
+  if (req.file) {
+    try {
+      const { secureUrl, publicId } = await uploadService.uploadBuffer({
+        buffer: req.file.buffer,
+        folder: `yulostores/menu/${req.restaurant._id}`,
+        publicId: `item_${Date.now()}`,
+      });
+      itemData.image = secureUrl;
+      uploadedPublicId = publicId;
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
+    }
+  }
+
+  let item;
+  try {
+    item = await MenuItem.create(itemData);
+  } catch (err) {
+    if (uploadedPublicId) await uploadService.deleteImage(uploadedPublicId);
+    throw err;
+  }
 
   await menuService.invalidateMenu(req.restaurant._id);
   sendSuccess(res, 201, 'Menu item created', { item });
@@ -57,25 +64,42 @@ export const getOne = asyncHandler(async (req, res) => {
 });
 
 export const update = asyncHandler(async (req, res) => {
-  const item = await MenuItem.findOne({
+  const existing = await MenuItem.findOne({
     _id: req.params.itemId,
     restaurantId: req.restaurant._id,
-  });
-  if (!item) throw new ApiError(404, 'NOT_FOUND', 'Menu item not found');
+  }).lean();
+  if (!existing) throw new ApiError(404, 'NOT_FOUND', 'Menu item not found');
 
-  let imageUrl = item.image;
+  const updates = { ...req.body };
+  let uploadedPublicId;
+
   if (req.file) {
-    const oldPublicId = extractPublicId(item.image);
-    const { url } = await uploadService.uploadImage(
-      req.file.buffer,
-      `yulostores/menu/${req.restaurant._id}`
-    );
-    imageUrl = url;
-    await uploadService.destroyImage(oldPublicId);
+    try {
+      const { secureUrl, publicId } = await uploadService.uploadBuffer({
+        buffer: req.file.buffer,
+        folder: `yulostores/menu/${req.restaurant._id}`,
+        publicId: `item_${Date.now()}`,
+      });
+      updates.image = secureUrl;
+      uploadedPublicId = publicId;
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
+    }
   }
 
-  const updates = { ...req.body, image: imageUrl };
-  const updated = await MenuItem.findByIdAndUpdate(item._id, { $set: updates }, { new: true });
+  let updated;
+  try {
+    updated = await MenuItem.findByIdAndUpdate(existing._id, { $set: updates }, { new: true });
+  } catch (err) {
+    if (uploadedPublicId) await uploadService.deleteImage(uploadedPublicId);
+    throw err;
+  }
+
+  // Remove old image from Cloudinary after successful DB write
+  if (req.file && existing.image) {
+    const match = existing.image.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+    if (match) await uploadService.deleteImage(match[1]).catch(() => {});
+  }
 
   await menuService.invalidateMenu(req.restaurant._id);
   sendSuccess(res, 200, 'Menu item updated', { item: updated });
