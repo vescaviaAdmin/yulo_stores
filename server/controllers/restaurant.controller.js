@@ -11,13 +11,12 @@ const PAGE_SIZE = 20;
 export const listRestaurants = asyncHandler(async (req, res) => {
   const { lat, lng, radius = 5, page = 1, q } = req.query;
 
-  // Text search path — no location cache
+  // Name search — regex, no text index required
   if (q) {
-    const results = await Restaurant.find(
-      { $text: { $search: q }, isActive: true },
-      { score: { $meta: 'textScore' } }
-    )
-      .sort({ score: { $meta: 'textScore' } })
+    const results = await Restaurant.find({
+      name: { $regex: q.trim(), $options: 'i' },
+      isActive: true,
+    })
       .limit(PAGE_SIZE)
       .lean();
     return sendSuccess(res, 200, 'Search results', { restaurants: results });

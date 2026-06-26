@@ -3,19 +3,19 @@ import { ApiError } from '../utils/ApiError.js';
 import { notifyService } from './notify.service.js';
 
 const VALID_TRANSITIONS = {
-  placed: ['confirmed', 'cancelled'],
+  placed:    ['confirmed', 'preparing', 'cancelled'],
   confirmed: ['preparing', 'cancelled'],
   preparing: ['ready', 'cancelled'],
-  ready: ['out_for_delivery', 'delivered', 'cancelled'],
+  ready:     ['out_for_delivery', 'delivered', 'cancelled'],
 };
 
 export const getQueue = (restaurantId) => {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-
+  // placed = new order; confirmed = accepted but chef hasn't started
   return Order.find({
     restaurantId,
-    status: 'placed',
+    status: { $in: ['placed', 'confirmed'] },
     createdAt: { $gte: startOfToday },
   })
     .sort({ createdAt: 1 })
@@ -23,17 +23,25 @@ export const getQueue = (restaurantId) => {
 };
 
 export const getBoard = async (restaurantId) => {
-  const orders = await Order.find({
-    restaurantId,
-    status: { $in: ['confirmed', 'preparing', 'ready'] },
-  })
-    .sort({ createdAt: 1 })
-    .lean();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [active, completed] = await Promise.all([
+    Order.find({
+      restaurantId,
+      status: { $in: ['preparing', 'ready'] },
+    }).sort({ createdAt: 1 }).lean(),
+    Order.find({
+      restaurantId,
+      status: { $in: ['delivered', 'out_for_delivery'] },
+      updatedAt: { $gte: today },
+    }).sort({ updatedAt: -1 }).limit(20).lean(),
+  ]);
 
   return {
-    confirmed: orders.filter((o) => o.status === 'confirmed'),
-    preparing: orders.filter((o) => o.status === 'preparing'),
-    ready: orders.filter((o) => o.status === 'ready'),
+    preparing: active.filter((o) => o.status === 'preparing'),
+    ready:     active.filter((o) => o.status === 'ready'),
+    completed,
   };
 };
 

@@ -4,6 +4,18 @@ import { ApiError } from '../../utils/ApiError.js';
 import { sendSuccess } from '../../utils/ApiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
+// Auto-generate next staffCode for this restaurant: W01, W02 / C01, C02
+async function nextStaffCode(restaurantId, role) {
+  const prefix = role === 'chef' ? 'C' : 'W';
+  const last = await StaffMember.findOne({ restaurantId, staffCode: new RegExp(`^${prefix}`) })
+    .sort({ staffCode: -1 })
+    .select('staffCode')
+    .lean();
+  if (!last) return `${prefix}01`;
+  const num = parseInt(last.staffCode.slice(1), 10) + 1;
+  return `${prefix}${String(num).padStart(2, '0')}`;
+}
+
 export const listStaff = asyncHandler(async (req, res) => {
   const staff = await StaffMember.find({ restaurantId: req.restaurant._id })
     .select('-pinHash')
@@ -22,9 +34,12 @@ export const createStaff = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'VALIDATION_ERROR', 'pin must be 4–8 digits');
   }
 
-  const pinHash = await argon2.hash(pin, { type: argon2.argon2id });
+  const staffCode = await nextStaffCode(req.restaurant._id, role);
+  const pinHash   = await argon2.hash(pin, { type: argon2.argon2id });
+
   const member = await StaffMember.create({
     restaurantId: req.restaurant._id,
+    staffCode,
     name,
     role,
     pinHash,
@@ -39,8 +54,8 @@ export const createStaff = asyncHandler(async (req, res) => {
 export const updateStaff = asyncHandler(async (req, res) => {
   const { name, email, isActive, pin } = req.body;
   const updates = {};
-  if (name !== undefined) updates.name = name;
-  if (email !== undefined) updates.email = email;
+  if (name     !== undefined) updates.name     = name;
+  if (email    !== undefined) updates.email    = email;
   if (isActive !== undefined) updates.isActive = isActive;
   if (pin) {
     if (pin.length < 4 || pin.length > 8) {
