@@ -43,9 +43,8 @@ export const create = asyncHandler(async (req, res) => {
       });
       itemData.image = secureUrl;
       uploadedPublicId = publicId;
-    } catch (err) {
-      // Image upload failed — create item without image rather than blocking
-      console.warn('Image upload failed, continuing without image:', err.message);
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
     }
   }
 
@@ -93,8 +92,8 @@ export const update = asyncHandler(async (req, res) => {
       });
       updates.image = secureUrl;
       uploadedPublicId = publicId;
-    } catch (err) {
-      console.warn('Image upload failed, continuing without image:', err.message);
+    } catch {
+      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
     }
   }
 
