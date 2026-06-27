@@ -44,9 +44,21 @@ export const updateSettings = asyncHandler(async (req, res) => {
     }
   }
 
+  // Use dot-notation $set so existing settings fields (gstPercent, serviceChargePercent, etc.)
+  // are preserved — replacing the whole settings object would wipe their defaults.
+  const patch = { name, description, cuisineTypes, address, logo: logoUrl, bannerImage: bannerUrl };
+  if (settings?.legalEntityType    !== undefined) patch['settings.legalEntityType']    = settings.legalEntityType;
+  if (settings?.ownerName          !== undefined) patch['settings.ownerName']          = settings.ownerName;
+  if (settings?.panNumber          !== undefined) patch['settings.panNumber']          = settings.panNumber;
+  if (settings?.gstNumber          !== undefined) patch['settings.gstNumber']          = settings.gstNumber;
+  if (settings?.healthPermitId     !== undefined) patch['settings.healthPermitId']     = settings.healthPermitId;
+  if (settings?.licenseExpiry      !== undefined) patch['settings.licenseExpiry']      = settings.licenseExpiry || null;
+  if (settings?.registrationNo     !== undefined) patch['settings.registrationNo']     = settings.registrationNo;
+  if (settings?.tradeLicenseExpiry !== undefined) patch['settings.tradeLicenseExpiry'] = settings.tradeLicenseExpiry || null;
+
   const updated = await Restaurant.findByIdAndUpdate(
     req.restaurant._id,
-    { $set: { name, description, cuisineTypes, address, settings, logo: logoUrl, bannerImage: bannerUrl } },
+    { $set: patch },
     { new: true }
   );
 
