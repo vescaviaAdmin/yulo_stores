@@ -43,8 +43,8 @@ export const create = asyncHandler(async (req, res) => {
       });
       itemData.image = secureUrl;
       uploadedPublicId = publicId;
-    } catch {
-      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
+    } catch (uploadErr) {
+      throw new ApiError(500, 'UPLOAD_FAILED', uploadErr?.message ?? 'Image upload failed');
     }
   }
 
@@ -92,8 +92,8 @@ export const update = asyncHandler(async (req, res) => {
       });
       updates.image = secureUrl;
       uploadedPublicId = publicId;
-    } catch {
-      throw new ApiError(500, 'UPLOAD_FAILED', 'Image upload failed');
+    } catch (uploadErr) {
+      throw new ApiError(500, 'UPLOAD_FAILED', uploadErr?.message ?? 'Image upload failed');
     }
   }
 
