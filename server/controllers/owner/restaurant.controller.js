@@ -7,9 +7,9 @@ export const createRestaurant = asyncHandler(async (req, res) => {
   const { name, description, cuisineTypes, address, location } = req.body;
 
   if (!name) throw new ApiError(400, 'VALIDATION_ERROR', 'name is required');
-  if (!location?.coordinates || !Array.isArray(location.coordinates) || location.coordinates.length !== 2) {
-    throw new ApiError(400, 'VALIDATION_ERROR', 'location.coordinates [lng, lat] is required');
-  }
+
+  const coords =
+    location?.coordinates?.length === 2 ? location.coordinates : [0, 0];
 
   const restaurant = await Restaurant.create({
     ownerId: req.user._id,
@@ -17,7 +17,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
     description,
     cuisineTypes: cuisineTypes || [],
     address: address || {},
-    location: { type: 'Point', coordinates: location.coordinates },
+    location: { type: 'Point', coordinates: coords },
   });
 
   sendSuccess(res, 201, 'Restaurant created', { restaurant });

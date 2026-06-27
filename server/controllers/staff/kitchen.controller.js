@@ -6,7 +6,6 @@ import { asyncHandler } from '../../utils/asyncHandler.js';
 import Order from '../../models/Order.js';
 
 const updateStatusSchema = z.object({
-  currentStatus: z.enum(['placed', 'confirmed', 'preparing', 'ready', 'out_for_delivery']),
   newStatus: z.enum(['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled']),
 });
 
@@ -26,9 +25,16 @@ export const updateStatus = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'VALIDATION_ERROR', 'Invalid input', result.error.flatten());
   }
 
+  // Fetch current status from DB so client doesn't need to track it
+  const existing = await Order.findOne({
+    _id: req.params.orderId,
+    restaurantId: req.staff.restaurantId,
+  }).select('status');
+  if (!existing) throw new ApiError(404, 'NOT_FOUND', 'Order not found');
+
   const order = await kitchenService.updateOrderStatus({
     orderId: req.params.orderId,
-    currentStatus: result.data.currentStatus,
+    currentStatus: existing.status,
     newStatus: result.data.newStatus,
     staffId: req.staff._id,
   });

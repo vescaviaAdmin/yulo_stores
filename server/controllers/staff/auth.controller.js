@@ -6,35 +6,35 @@ import { sendSuccess } from '../../utils/ApiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
 export const staffLogin = asyncHandler(async (req, res) => {
-  const { restaurantId, pin } = req.body;
+  const { restaurantId, staffCode, pin } = req.body;
 
-  const staffList = await StaffMember.find({ restaurantId, isActive: true });
+  if (!staffCode) throw new ApiError(400, 'VALIDATION_ERROR', 'staffCode is required');
+  if (!pin)       throw new ApiError(400, 'VALIDATION_ERROR', 'pin is required');
 
-  let authenticated = null;
-  for (const staff of staffList) {
-    try {
-      const match = await argon2.verify(staff.pinHash, pin);
-      if (match) { authenticated = staff; break; }
-    } catch {
-      // malformed hash — skip this staff member
-    }
-  }
+  // O(1) — single indexed lookup, no loop
+  const staff = await StaffMember.findOne({
+    restaurantId,
+    staffCode: staffCode.toUpperCase(),
+    isActive: true,
+  });
 
-  if (!authenticated) {
-    throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid PIN');
-  }
+  if (!staff) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid staff code or PIN');
+
+  const valid = await argon2.verify(staff.pinHash, pin);
+  if (!valid) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid staff code or PIN');
 
   const staffToken = authService.generateStaffToken(
-    authenticated._id,
-    authenticated.role,
-    authenticated.restaurantId
+    staff._id,
+    staff.role,
+    staff.restaurantId
   );
 
   sendSuccess(res, 200, 'Login successful', {
     staffToken,
-    role: authenticated.role,
-    name: authenticated.name,
-    restaurantId: authenticated.restaurantId,
+    role: staff.role,
+    name: staff.name,
+    staffCode: staff.staffCode,
+    restaurantId: staff.restaurantId,
   });
 });
 

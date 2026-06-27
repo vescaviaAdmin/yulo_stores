@@ -2,6 +2,7 @@ import { redis } from '../config/redis.js';
 import logger from '../utils/logger.js';
 
 export const get = async (key) => {
+  if (!redis) return null;
   try {
     const val = await redis.get(key);
     return val ? JSON.parse(val) : null;
@@ -12,6 +13,7 @@ export const get = async (key) => {
 };
 
 export const set = async (key, data, ttlSeconds) => {
+  if (!redis) return;
   try {
     await redis.set(key, JSON.stringify(data), 'EX', ttlSeconds);
   } catch (err) {
@@ -20,6 +22,7 @@ export const set = async (key, data, ttlSeconds) => {
 };
 
 export const invalidate = async (key) => {
+  if (!redis) return;
   try {
     await redis.del(key);
   } catch (err) {

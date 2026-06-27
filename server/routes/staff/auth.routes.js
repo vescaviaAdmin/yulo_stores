@@ -9,7 +9,8 @@ const router = Router();
 
 const loginSchema = z.object({
   restaurantId: z.string().min(1),
-  pin: z.string().min(4).max(8),
+  staffCode:    z.string().min(1).max(10),
+  pin:          z.string().min(4).max(8),
 });
 
 router.post('/login', authLimiter, validate(loginSchema), staffLogin);

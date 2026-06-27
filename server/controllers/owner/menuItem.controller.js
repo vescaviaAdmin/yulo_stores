@@ -52,7 +52,7 @@ export const create = asyncHandler(async (req, res) => {
   try {
     item = await MenuItem.create(itemData);
   } catch (err) {
-    if (uploadedPublicId) await uploadService.deleteImage(uploadedPublicId);
+    if (uploadedPublicId) await uploadService.deleteImage(uploadedPublicId).catch(() => {});
     throw err;
   }
 
