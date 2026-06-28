@@ -391,7 +391,7 @@ export default function StoreSettings() {
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] border-b border-brand-cream/60 px-6 py-3 text-xs uppercase tracking-wide text-muted-foreground">
+            <div className="hidden grid-cols-[1.2fr_1fr_1fr_1fr] border-b border-brand-cream/60 px-6 py-3 text-xs uppercase tracking-wide text-muted-foreground sm:grid">
               <span>Day</span>
               <span>Status</span>
               <span>Opening Time</span>
@@ -401,7 +401,7 @@ export default function StoreSettings() {
               <div
                 key={h.day}
                 className={cn(
-                  "grid grid-cols-[1.2fr_1fr_1fr_1fr] items-center border-b border-brand-cream/40 px-6 py-3 last:border-0",
+                  "flex flex-col gap-2 border-b border-brand-cream/40 px-4 py-3 last:border-0 sm:grid sm:grid-cols-[1.2fr_1fr_1fr_1fr] sm:items-center sm:px-6",
                   h.closed && "opacity-60",
                 )}
               >
@@ -417,14 +417,14 @@ export default function StoreSettings() {
                   value={h.open}
                   disabled={h.closed}
                   onChange={(e) => setHour(i, { open: e.target.value })}
-                  className="h-8 w-32"
+                  className="h-8 w-full sm:w-32"
                 />
                 <Input
                   type="time"
                   value={h.close}
                   disabled={h.closed}
                   onChange={(e) => setHour(i, { close: e.target.value })}
-                  className="h-8 w-32"
+                  className="h-8 w-full sm:w-32"
                 />
               </div>
             ))}
@@ -603,7 +603,7 @@ export default function StoreSettings() {
       </div>
 
       {/* Sticky action bar */}
-      <div className="sticky bottom-0 -mx-6 flex items-center justify-between border-t border-brand-cream/60 bg-[#FAFAF8]/95 px-6 py-3.5 backdrop-blur lg:-mx-7 lg:px-7">
+      <div className="sticky bottom-0 -mx-4 flex items-center justify-between border-t border-brand-cream/60 bg-[#FAFAF8]/95 px-4 py-3.5 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-7 lg:px-7">
         <span className={cn("text-sm", dirty ? "text-brand-orange" : "text-muted-foreground")}>
           {dirty ? "● You have unsaved changes" : savedNote || "All changes saved"}
         </span>

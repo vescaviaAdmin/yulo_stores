@@ -67,12 +67,12 @@ function BottomNav() {
 /* Shared page topbar — used by screens that don't have their own header */
 export function WaiterPageHeader({ title, subtitle, right }) {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-cream/60 bg-[#FAFAF8] px-6 py-3.5">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 border-b border-brand-cream/60 bg-[#FAFAF8] px-4 py-3.5 sm:px-6">
       <div>
         <p className="text-lg font-bold text-[#24190f]">{title}</p>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
-      {right && <div>{right}</div>}
+      {right && <div className="shrink-0">{right}</div>}
     </header>
   );
 }

@@ -314,12 +314,12 @@ function OrderCard({ order, onAction }) {
         })}
       </div>
 
-      {/* Actions */}
-      <div className="grid grid-cols-4 gap-px border-t border-brand-cream/50 bg-brand-cream/30">
+      {/* Actions — 2 cols on xs, 4 cols on sm+ */}
+      <div className="grid grid-cols-2 gap-px border-t border-brand-cream/50 bg-brand-cream/30 sm:grid-cols-4">
         <button
           type="button"
           onClick={handleAddItems}
-          className="bg-white px-3 py-3.5 text-sm font-semibold text-[#24190f] transition hover:bg-brand-cream/20 first:rounded-bl-2xl"
+          className="bg-white px-3 py-3.5 text-sm font-semibold text-[#24190f] transition hover:bg-brand-cream/20 first:rounded-bl-2xl sm:first:rounded-bl-2xl"
         >
           Add Items
         </button>
@@ -335,13 +335,13 @@ function OrderCard({ order, onAction }) {
           onClick={() => onAction(order.id, "served")}
           className="flex items-center justify-center gap-1.5 bg-white px-3 py-3.5 text-sm font-semibold text-[#24190f] transition hover:bg-brand-cream/20"
         >
-          <CheckCheck className="h-4 w-4" /> Mark As Served
+          <CheckCheck className="h-4 w-4" /> Served
         </button>
         {paid ? (
           <button
             type="button"
             disabled
-            className="rounded-br-2xl bg-white px-3 py-3.5 text-sm font-semibold text-muted-foreground"
+            className="rounded-br-2xl bg-white px-3 py-3.5 text-sm font-semibold text-muted-foreground sm:rounded-bl-none"
           >
             Paid
           </button>
@@ -349,7 +349,7 @@ function OrderCard({ order, onAction }) {
           <button
             type="button"
             onClick={() => navigate("/waiter/orders")}
-            className="rounded-br-2xl border border-brand-maroon bg-white px-3 py-3.5 text-sm font-bold text-brand-maroon transition hover:bg-brand-maroon/5"
+            className="rounded-br-2xl border border-brand-maroon bg-white px-3 py-3.5 text-sm font-bold text-brand-maroon transition hover:bg-brand-maroon/5 sm:rounded-bl-none"
           >
             View Bill
           </button>
@@ -357,7 +357,7 @@ function OrderCard({ order, onAction }) {
           <button
             type="button"
             onClick={() => onAction(order.id, "requested", true)}
-            className="rounded-br-2xl bg-white px-3 py-3.5 text-sm font-semibold text-[#24190f] transition hover:bg-brand-cream/20"
+            className="rounded-br-2xl bg-white px-3 py-3.5 text-sm font-semibold text-[#24190f] transition hover:bg-brand-cream/20 sm:rounded-bl-none"
           >
             Request Bill
           </button>
@@ -423,19 +423,19 @@ export default function WaiterDashboard() {
   return (
     <WaiterLayout>
       {/* Topbar */}
-      <header className="sticky top-0 z-30 border-b border-brand-cream/60 bg-[#FAFAF8] px-6 py-3">
+      <header className="sticky top-0 z-30 border-b border-brand-cream/60 bg-[#FAFAF8] px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold text-brand-red">Saffron Kitchen</p>
             <p className="text-xs text-muted-foreground">Waiter Dashboard</p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-brand-gradient text-xs font-bold text-white">
                 {(staff?.name ?? "W").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col leading-tight">
+            <div className="hidden flex-col leading-tight sm:flex">
               <span className="text-sm font-semibold">{staff?.name ?? "Waiter"}</span>
               <span className="text-[10px] text-muted-foreground">Waiter</span>
             </div>
@@ -444,29 +444,29 @@ export default function WaiterDashboard() {
       </header>
 
       {/* Table context bar */}
-      <div className="flex items-center justify-between border-b border-brand-cream/50 bg-[#FAFAF8] px-6 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-cream/50 bg-[#FAFAF8] px-4 py-2.5 sm:px-6">
         <span className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-          <UtensilsCrossed className="h-4 w-4" />
+          <UtensilsCrossed className="h-4 w-4 shrink-0" />
           Table {activeTable}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-gradient px-3.5 py-2 text-sm font-bold text-white hover:brightness-105"
+            className="flex items-center gap-1.5 rounded-xl bg-brand-gradient px-3 py-2 text-sm font-bold text-white hover:brightness-105 sm:px-3.5"
           >
             <QrCode className="h-4 w-4" /> Scan QR
           </button>
           <button
             type="button"
-            className="rounded-xl border border-brand-cream/80 bg-white px-3.5 py-2 text-sm font-semibold text-[#24190f] hover:bg-brand-cream/20"
+            className="rounded-xl border border-brand-cream/80 bg-white px-3 py-2 text-sm font-semibold text-[#24190f] hover:bg-brand-cream/20 sm:px-3.5"
           >
             Select Table
           </button>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[860px] px-5 py-5">
+      <div className="mx-auto max-w-[860px] px-4 py-5 sm:px-5">
         {/* Filter tabs */}
         <div className="mb-5 flex flex-wrap gap-2">
           {FILTERS.map((f) => (

@@ -258,7 +258,7 @@ export default function WaiterMenu() {
     <WaiterLayout>
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 bg-[#FAFAF8]">
-        <div className="flex items-center justify-between border-b border-brand-cream/60 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-brand-cream/60 px-4 py-3 sm:px-5">
           <div>
             <p className="text-lg font-bold text-brand-red">
               {restaurant?.name ?? "Menu"}
@@ -286,7 +286,7 @@ export default function WaiterMenu() {
 
         {/* Search bar (toggle) */}
         {showSearch && (
-          <div className="border-b border-brand-cream/60 px-5 py-2.5">
+          <div className="border-b border-brand-cream/60 px-4 py-2.5 sm:px-5">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -301,7 +301,7 @@ export default function WaiterMenu() {
         )}
 
         {/* Food type filter */}
-        <div className="flex gap-2 overflow-x-auto px-5 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 overflow-x-auto px-4 py-2.5 sm:px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {FOOD_FILTERS.map((f) => (
             <button
               key={f.key}
@@ -322,7 +322,7 @@ export default function WaiterMenu() {
 
         {/* Category tabs */}
         {categoryNames.length > 0 && (
-          <div className="flex gap-5 overflow-x-auto border-b border-brand-cream/60 px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-5 overflow-x-auto border-b border-brand-cream/60 px-4 sm:px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {categoryNames.map((cat) => (
               <button
                 key={cat}
@@ -343,7 +343,7 @@ export default function WaiterMenu() {
       </header>
 
       {/* ── Content ── */}
-      <div className={cn("space-y-7 px-5 py-5", cartCount > 0 && "pb-24")}>
+      <div className={cn("space-y-7 px-4 py-5 sm:px-5", cartCount > 0 && "pb-24")}>
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (

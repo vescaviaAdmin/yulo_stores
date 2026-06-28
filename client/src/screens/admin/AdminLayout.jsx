@@ -1,12 +1,14 @@
 // Platform Admin shell — a dark platform sidebar (distinct branding from the
 // owner portal) + top bar. Used across all /admin/* screens (PRD §14).
 
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   ClipboardList,
   LayoutDashboard,
   LogOut,
+  Menu,
   QrCode,
   ScrollText,
   Settings,
@@ -14,6 +16,7 @@ import {
   Store,
   Tag,
   Users,
+  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -46,19 +49,51 @@ export function formatNumber(value) {
 export default function AdminLayout({ children, title, subtitle, action }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const isActive = (item) => (item.exact ? pathname === item.to : pathname.startsWith(item.to));
+
+  function handleNav(to) {
+    navigate(to);
+    setSidebarOpen(false);
+  }
 
   return (
     <div className="flex min-h-screen bg-brand-page font-sans text-[#24190f]">
-      <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col bg-sidebar-gradient">
-        <div className="flex items-center gap-3 px-6 pb-8 pt-6">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-gradient text-white">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-          <div className="leading-tight">
-            <p className="font-bold text-brand-cream2">Yulo Admin</p>
-            <p className="text-[11px] text-brand-cream/50">Platform Console</p>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 flex h-screen w-[260px] shrink-0 flex-col bg-sidebar-gradient transition-transform duration-300",
+          "lg:sticky lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        )}
+      >
+        <div className="flex items-center justify-between gap-3 px-6 pb-8 pt-6">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-gradient text-white">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div className="leading-tight">
+              <p className="font-bold text-brand-cream2">Yulo Admin</p>
+              <p className="text-[11px] text-brand-cream/50">Platform Console</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="grid h-8 w-8 place-items-center rounded-lg text-brand-cream/60 hover:bg-brand-cream/10 hover:text-brand-cream lg:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">
@@ -68,7 +103,7 @@ export default function AdminLayout({ children, title, subtitle, action }) {
               <button
                 key={item.to}
                 type="button"
-                onClick={() => navigate(item.to)}
+                onClick={() => handleNav(item.to)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
                   isActive(item)
@@ -94,10 +129,20 @@ export default function AdminLayout({ children, title, subtitle, action }) {
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col gap-5 p-6 pb-12 lg:px-7">
-        <header className="flex items-center justify-between rounded-2xl border border-brand-cream/60 bg-[#FAFAF8] px-5 py-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <span className="text-xl font-bold text-brand-red">Platform Console</span>
-          <div className="flex items-center gap-3.5">
+      <main className="flex min-w-0 flex-1 flex-col gap-5 p-4 pb-12 sm:p-6 lg:px-7">
+        <header className="flex items-center justify-between rounded-2xl border border-brand-cream/60 bg-[#FAFAF8] px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] sm:px-5 sm:py-3.5">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((o) => !o)}
+              className="grid h-9 w-9 place-items-center rounded-lg border border-brand-cream/70 text-[#5a403e] hover:bg-[#f5ede4] lg:hidden"
+              aria-label="Toggle menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="text-lg font-bold text-brand-red sm:text-xl">Platform Console</span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3.5">
             <button
               type="button"
               className="relative grid h-9 w-9 place-items-center rounded-lg border border-brand-cream/60 bg-white text-[#5f5f5f]"
@@ -109,7 +154,7 @@ export default function AdminLayout({ children, title, subtitle, action }) {
             <Avatar>
               <AvatarFallback className="bg-brand-gradient text-xs font-semibold text-white">AD</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col leading-tight">
+            <div className="hidden flex-col leading-tight sm:flex">
               <span className="text-sm font-semibold">Platform Admin</span>
               <span className="text-xs text-muted-foreground">Super Admin</span>
             </div>
@@ -117,7 +162,7 @@ export default function AdminLayout({ children, title, subtitle, action }) {
         </header>
 
         {(title || action) && (
-          <div className="flex items-start justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               {title ? <h1 className="text-2xl font-bold">{title}</h1> : null}
               {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}

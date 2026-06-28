@@ -129,7 +129,7 @@ function OrderDetailsDrawer({ order, onClose, onMarkReady }) {
       />
       <div
         className={cn(
-          "fixed right-0 top-0 z-50 flex h-full w-[400px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out",
+          "fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out sm:w-[400px]",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -315,40 +315,42 @@ function OrdersTable({ orders }) {
     );
   }
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-cream/60 bg-white">
-      <div className="grid grid-cols-[1fr_1.2fr_2.5fr_1.5fr_0.6fr] bg-[#FFF5EE] px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        <span>Order ID</span>
-        <span>Table / Mode</span>
-        <span>Items</span>
-        <span>Status</span>
-        <span>Est.</span>
-      </div>
-      {orders.map((order, idx) => {
-        const take = isTakeaway(order);
-        const summary = order.items.map((i) => `${i.quantity}x ${i.title}`).join(", ");
-        const duration = estTime(order);
-        return (
-          <div
-            key={order.id}
-            className={cn(
-              "grid grid-cols-[1fr_1.2fr_2.5fr_1.5fr_0.6fr] items-center px-6 py-4",
-              idx > 0 && "border-t border-brand-cream/40",
-            )}
-          >
-            <span className="text-sm font-bold text-[#24190f]">#{order.number}</span>
-            <span className={cn("text-sm font-medium", take ? "text-brand-orange" : "text-[#24190f]")}>
-              {orderLabel(order)}
-            </span>
-            <span className="truncate pr-4 text-sm text-muted-foreground">{summary}</span>
-            <span className="text-sm capitalize text-[#24190f]">{order.status}</span>
-            <span>
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                {duration} min
+    <div className="overflow-x-auto rounded-2xl border border-brand-cream/60">
+      <div className="min-w-[560px] overflow-hidden rounded-2xl bg-white">
+        <div className="grid grid-cols-[1fr_1.2fr_2.5fr_1.5fr_0.6fr] bg-[#FFF5EE] px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span>Order ID</span>
+          <span>Table / Mode</span>
+          <span>Items</span>
+          <span>Status</span>
+          <span>Est.</span>
+        </div>
+        {orders.map((order, idx) => {
+          const take = isTakeaway(order);
+          const summary = order.items.map((i) => `${i.quantity}x ${i.title}`).join(", ");
+          const duration = estTime(order);
+          return (
+            <div
+              key={order.id}
+              className={cn(
+                "grid grid-cols-[1fr_1.2fr_2.5fr_1.5fr_0.6fr] items-center px-6 py-4",
+                idx > 0 && "border-t border-brand-cream/40",
+              )}
+            >
+              <span className="text-sm font-bold text-[#24190f]">#{order.number}</span>
+              <span className={cn("text-sm font-medium", take ? "text-brand-orange" : "text-[#24190f]")}>
+                {orderLabel(order)}
               </span>
-            </span>
-          </div>
-        );
-      })}
+              <span className="truncate pr-4 text-sm text-muted-foreground">{summary}</span>
+              <span className="text-sm capitalize text-[#24190f]">{order.status}</span>
+              <span>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                  {duration} min
+                </span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -399,32 +401,32 @@ export default function ChefDashboard() {
   return (
     <div className="min-h-screen bg-brand-page font-sans text-[#24190f]">
       {/* Topbar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-cream/60 bg-[#FAFAF8] px-8 py-3 shadow-sm">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-cream/60 bg-[#FAFAF8] px-4 py-3 shadow-sm sm:px-8">
         <div className="flex items-center gap-3">
-          <span className="h-9 w-9 rounded-full bg-brand-dark2" />
-          <span className="text-xl font-bold text-brand-red">Kitchen Display</span>
+          <span className="h-9 w-9 shrink-0 rounded-full bg-brand-dark2" />
+          <span className="text-lg font-bold text-brand-red sm:text-xl">Kitchen Display</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Avatar>
             <AvatarFallback className="bg-brand-gradient text-xs font-semibold text-white">
               {(staff?.name ?? "?").slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col leading-tight">
+          <div className="hidden flex-col leading-tight sm:flex">
             <span className="text-sm font-semibold">{staff?.name ?? "Chef"}</span>
             <span className="text-xs text-muted-foreground">Chef · {staff?.staffCode ?? ""}</span>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="ml-4 flex items-center gap-1.5 rounded-xl border border-brand-cream px-3 py-2 text-xs font-bold text-brand-maroon hover:bg-brand-cream/30"
+            className="flex items-center gap-1.5 rounded-xl border border-brand-cream px-3 py-2 text-xs font-bold text-brand-maroon hover:bg-brand-cream/30 sm:ml-4"
           >
             <LogOut className="h-3.5 w-3.5" /> Logout
           </button>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1280px] space-y-10 px-8 py-8">
+      <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-6 sm:px-8 sm:py-8">
         {error && (
           <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-brand-maroon">{error}</p>
         )}

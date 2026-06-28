@@ -8,7 +8,7 @@ export default function WaiterRequests() {
         title="Customer Requests"
         subtitle="Respond to guest assistance requests from your tables."
       />
-      <div className="px-5 py-5">
+      <div className="px-4 py-5 sm:px-5">
         <RequestsBoard />
       </div>
     </WaiterLayout>

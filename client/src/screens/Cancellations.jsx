@@ -351,14 +351,14 @@ export default function Cancellations() {
   return (
     <DashboardLayout>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Manage Orders</h1>
           <p className="text-sm text-muted-foreground">
             Monitor and manage all incoming restaurant orders.
           </p>
         </div>
-        <div className="relative w-64">
+        <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}

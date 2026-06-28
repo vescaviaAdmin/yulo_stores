@@ -17,7 +17,7 @@ export default function WaiterSettings() {
     <WaiterLayout>
       <WaiterPageHeader title="Settings" subtitle="Manage your waiter session." />
 
-      <div className="px-5 py-5">
+      <div className="px-4 py-5 sm:px-5">
         <div className="mx-auto max-w-lg space-y-4">
           <div className="flex items-center gap-4 rounded-2xl border border-brand-cream/60 bg-white p-5">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-gradient text-white">

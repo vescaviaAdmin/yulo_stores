@@ -22,13 +22,33 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import AdminLayout from "./AdminLayout";
 
-function downloadQr(code) {
-  const link = document.createElement("a");
-  link.href = code.qrImageUrl;
-  link.download = `qr-${code.restaurant}-${code.label}`.replace(/\s+/g, "-").toLowerCase() + ".svg";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+async function downloadQr(code) {
+  const filename = (`qr-${code.restaurant}-${code.label}`).replace(/\s+/g, "-").toLowerCase() + ".png";
+
+  if (code.qrImageUrl.startsWith("data:")) {
+    const a = document.createElement("a");
+    a.href = code.qrImageUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+
+  try {
+    const res = await fetch(code.qrImageUrl);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(code.qrImageUrl, "_blank");
+  }
 }
 
 export default function AdminQr() {

@@ -51,7 +51,7 @@ export default function WaiterOrders() {
         subtitle="Track table orders and mark them served once delivered."
       />
 
-      <div className="px-5 py-5">
+      <div className="px-4 py-5 sm:px-5">
         {isError && <p className="mb-4 text-sm text-brand-maroon">Failed to load orders.</p>}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

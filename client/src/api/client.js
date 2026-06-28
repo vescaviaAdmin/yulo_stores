@@ -2,19 +2,20 @@ import axios from "axios";
 import { API_BASE } from "./config";
 
 // Access tokens live in memory only — never localStorage.
-// Staff token goes to sessionStorage (8 h lifetime, tab-scoped is acceptable).
+// Staff token goes to localStorage so it survives tab closes and mobile browser
+// background kills (waiters/chefs work long shifts and refresh the page often).
 let _accessToken = null;
 let _staffToken = null;
 
 export function setAccessToken(token) { _accessToken = token; }
 export function setStaffToken(token) {
   _staffToken = token;
-  if (token) sessionStorage.setItem("yulo_staff_token", token);
-  else sessionStorage.removeItem("yulo_staff_token");
+  if (token) localStorage.setItem("yulo_staff_token", token);
+  else localStorage.removeItem("yulo_staff_token");
 }
 export function getAccessToken() { return _accessToken; }
 export function getStaffToken() {
-  if (!_staffToken) _staffToken = sessionStorage.getItem("yulo_staff_token");
+  if (!_staffToken) _staffToken = localStorage.getItem("yulo_staff_token");
   return _staffToken;
 }
 
@@ -41,6 +42,18 @@ client.interceptors.response.use(
   async (err) => {
     const original = err.config;
     const code = err.response?.data?.code;
+
+    // Staff token expired or revoked — clear storage and redirect to login.
+    if (
+      original._staff &&
+      (code === "TOKEN_EXPIRED" || code === "INVALID_TOKEN") &&
+      err.response?.status === 401
+    ) {
+      setStaffToken(null);
+      localStorage.removeItem("yulo_staff_profile");
+      window.location.replace("/staff/login");
+      return Promise.reject(err);
+    }
 
     // Only auto-refresh owner/customer access tokens, not staff tokens.
     if (code === "TOKEN_EXPIRED" && !original._retried && !original._staff) {

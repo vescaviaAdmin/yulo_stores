@@ -64,7 +64,7 @@ export default function Profile() {
   return (
     <DashboardLayout>
       <form onSubmit={handleSave} className="flex flex-col gap-5">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Profile</h1>
             <p className="text-sm text-muted-foreground">
